@@ -12,6 +12,11 @@ public class Env {
     private static Env ourInstance;
     private Map<ConfEntry, String> conf;
 
+    public static boolean isTCP;
+    public static boolean isDEBUG;
+    public static boolean isMORE_LOGS;
+    public static boolean isTEST_ERROR_CONNECTION;
+
     private Env(File file) {
         conf = new HashMap<>();
         try {
@@ -21,7 +26,9 @@ public class Env {
                     String[] splitLine = line.split("=");
                     ConfEntry confEntry = ConfEntry.fromString(splitLine[0].trim().replaceAll("[\";]", ""));
                     if (confEntry == null) continue;
-                    conf.put(confEntry, splitLine[1].trim().replaceAll("[\";]", ""));
+                    String confEntryValue = splitLine[1].trim().replaceAll("[\";]", "");
+                    setStaticGlobal(confEntry, confEntryValue);
+                    conf.put(confEntry, confEntryValue);
                 }
             }
         } catch (IOException e) {
@@ -35,6 +42,18 @@ public class Env {
             ourInstance = new Env(new File("./src/app/conf/application.conf"));
         }
         return ourInstance;
+    }
+
+    public static void setStaticGlobal(ConfEntry confEntry, String value) {
+        if (ConfEntry.DEBUG.equals(confEntry)) {
+            isDEBUG = Boolean.valueOf(value);
+        } else if (ConfEntry.MORE_LOGS.equals(confEntry)) {
+            isMORE_LOGS = Boolean.valueOf(value);
+        } else if (ConfEntry.CONNECTOR_PROTOCOL.equals(confEntry)) {
+            isTCP = "TCP".equalsIgnoreCase(value);
+        } else if (ConfEntry.CONNECTOR_PROTOCOL.equals(confEntry)) {
+            isTEST_ERROR_CONNECTION = Boolean.valueOf(value);
+        }
     }
 
     public Map<ConfEntry, String> getConf() {

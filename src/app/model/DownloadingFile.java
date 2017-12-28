@@ -16,4 +16,8 @@ public class DownloadingFile {
         this.targetSize = targetSize;
         this.bytes = new byte[targetSize];
     }
+
+    public boolean isDownloaded() {
+        return !this.isDownloading && (this.currentSize == this.targetSize);
+    }
 }

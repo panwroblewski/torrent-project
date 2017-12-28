@@ -1,13 +1,15 @@
 package app.api.connectors;
 
 import app.api.ApiMethod;
+import app.common.Env.Env;
 import app.common.Logger.Logger;
 
 import java.io.*;
 import java.net.Socket;
+import java.net.SocketException;
 import java.nio.file.Files;
 
-public class ConnectorTcpImplementation implements Connector {
+public class ConnectorTcpImpl implements Connector {
 
     @Override
     public void sendResponse(Socket s, String payload, boolean shouldClose) {
@@ -27,17 +29,21 @@ public class ConnectorTcpImplementation implements Connector {
     }
 
     @Override
-    public void sendFileThroughSocket(Socket s, File fileToSend) {
+    public void sendFileThroughSocket(Socket s, File fileToSend) throws SocketException {
         try {
             Logger.debugInfo(":::Connector::sendFileThroughSocket()");
 
             InputStream in = Files.newInputStream(fileToSend.toPath());
             OutputStream out = s.getOutputStream();
 
+            int counter = 0;
             int count;
-            byte[] buffer = new byte[8192];
+            byte[] buffer = new byte[2];
             while ((count = in.read(buffer)) > 0) {
                 out.write(buffer, 0, count);
+                if (Env.isTEST_ERROR_CONNECTION) { //FOR TESTING ERROR IN CONNECTION
+                    if (counter++ == 3) out.close();
+                }
             }
 
             out.close();
@@ -71,7 +77,7 @@ public class ConnectorTcpImplementation implements Connector {
             String line;
             String response = "";
             while ((line = reader.readLine()) != null) {
-               response += (line + System.getProperty("line.separator"));
+                response += (line + System.getProperty("line.separator"));
             }
             reader.close();
             return response;
@@ -88,7 +94,7 @@ public class ConnectorTcpImplementation implements Connector {
         sendResponse(socket, ApiMethod.PING.toString(), false);
         String response = getResponse(socket);
         if (response.contains("ok")) {
-             return true;
+            return true;
         }
         return false;
     }

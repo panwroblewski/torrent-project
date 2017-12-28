@@ -1,12 +1,13 @@
 package app.api;
 
 import app.api.connectors.Connector;
-import app.api.connectors.ConnectorTcpImplementation;
+import app.api.connectors.ConnectorTcpImpl;
 import app.common.Env.ConfEntry;
 import app.common.Env.Env;
 import app.common.Logger.Logger;
 import app.model.CurrentHostNetworkFilesList;
 import app.model.Host;
+import app.model.CurrentHostDownloadingNetworkFilesList;
 import app.model.NetworkFile;
 
 import java.io.*;
@@ -18,15 +19,17 @@ public class ApiService {
 
     private static ApiService instance;
     private static Connector connector;
-    public CurrentHostNetworkFilesList currentHostFilesList;
+    private CurrentHostNetworkFilesList currentHostFilesList;
+    private CurrentHostDownloadingNetworkFilesList currentHostDownloadingNetworkFilesList;
 
     private ApiService() {
-        if (Env.getInstance().getConf().get(ConfEntry.CONNECTOR_PROTOCOL).equals("TCP")) {
-            connector = new ConnectorTcpImplementation();
+        if (Env.isTCP) {
+            connector = new ConnectorTcpImpl();
         } else {
-            System.out.println("Protocol not yet implemented: " + Env.getInstance().getConf().get(ConfEntry.CONNECTOR_PROTOCOL));
+            Logger.uiInfo("Protocol not yet implemented: " + Env.getInstance().getConf().get(ConfEntry.CONNECTOR_PROTOCOL));
         }
         currentHostFilesList = new CurrentHostNetworkFilesList();
+        currentHostDownloadingNetworkFilesList = new CurrentHostDownloadingNetworkFilesList();
     }
 
     public static ApiService getInstance() {
@@ -91,7 +94,7 @@ public class ApiService {
     }
 
     public void sendFile(Socket socket, int fileNumber) throws FileNotFoundException {
-        Logger.debugInfo(":::ApiService::push()");
+        Logger.debugInfo(":::ApiService::sendFile()");
         try {
             NetworkFile fileToSend = currentHostFilesList.getByIndex(fileNumber);
             if (fileToSend != null) {
@@ -105,7 +108,7 @@ public class ApiService {
     }
 
     public String saveFile(Socket socket, String targetFolder) {
-        Logger.debugInfo(":::ApiService::pull()");
+        Logger.debugInfo(":::ApiService::saveFile()");
         try {
             InputStream in = socket.getInputStream();
             int byteToBeRead = -1;
@@ -138,6 +141,7 @@ public class ApiService {
         Logger.debugInfo(":::ApiService::readFromResponse()");
         connector.readFromResponse(socket);
     }
+
     public String getResponse(Socket socket) throws IOException{
         Logger.debugInfo(":::ApiService::getResponse()");
         return connector.getResponse(socket);

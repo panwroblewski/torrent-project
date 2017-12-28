@@ -30,7 +30,6 @@ public class Server {
             try {
                 Logger.uiInfo("Server starting on port: " + DEFAULT_SERVER_PORT_NUMBER + "....");
                 ss = new ServerSocket(DEFAULT_SERVER_PORT_NUMBER);
-                int counter = 0;
 
                 while (true) {
                     Socket socket = ss.accept();
@@ -79,21 +78,6 @@ public class Server {
                 e.printStackTrace();
             }
         }).start();
-
-//        while (!socket.isClosed() && (line = in.readLine()) != null) {
-//            Logger.log("SERVER-" + socket.getInetAddress() + ":" + socket.getPort(), "received request: " + line);
-//
-//            if (line.startsWith(ApiMethod.PUSH.toString())) {
-//                apiService.saveFile(socket, Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH));
-//            } else if (line.startsWith(ApiMethod.LIST.toString())) {
-//                apiService.sendPayload(socket, apiService.getListOfFiles(), true);
-//            } else if (line.startsWith(ApiMethod.PULL.toString())) {
-//                int fileNumber = Integer.parseInt(line.split(" ")[1]);
-//                apiService.push(socket, fileNumber);
-//            } else if (line.startsWith(ApiMethod.PING.toString())) {
-//                apiService.sendPayload(socket, "ok", true);
-//            }
-//        }
     }
 
     private static int pickPort() {
@@ -103,7 +87,7 @@ public class Server {
                 return port;
             }
         }
-        System.out.println("There are no free ports available to start server.");
+        Logger.uiInfo("There are no free ports available to start server.");
         return 0;
     }
 
