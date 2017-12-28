@@ -1,0 +1,150 @@
+package app.api;
+
+import app.api.connectors.Connector;
+import app.api.connectors.ConnectorTcpImplementation;
+import app.common.Env.ConfEntry;
+import app.common.Env.Env;
+import app.common.Logger.Logger;
+import app.model.CurrentHostNetworkFilesList;
+import app.model.Host;
+import app.model.NetworkFile;
+
+import java.io.*;
+import java.net.Socket;
+import java.util.Date;
+import java.util.List;
+
+public class ApiService {
+
+    private static ApiService instance;
+    private static Connector connector;
+    public CurrentHostNetworkFilesList currentHostFilesList;
+
+    private ApiService() {
+        if (Env.getInstance().getConf().get(ConfEntry.CONNECTOR_PROTOCOL).equals("TCP")) {
+            connector = new ConnectorTcpImplementation();
+        } else {
+            System.out.println("Protocol not yet implemented: " + Env.getInstance().getConf().get(ConfEntry.CONNECTOR_PROTOCOL));
+        }
+        currentHostFilesList = new CurrentHostNetworkFilesList();
+    }
+
+    public static ApiService getInstance() {
+        if (instance == null) {
+            instance = new ApiService();
+        }
+        return instance;
+    }
+
+    public Connector getConnector() {
+        return connector;
+    }
+
+    public static boolean ping(Host host) {
+        Logger.debugInfo(":::ApiService::ping(), host: " + host.ip + ":" + host.port);
+        try {
+            Socket socket = new Socket(host.ip, Integer.parseInt(host.port));
+
+            return connector.ping(socket);
+        } catch (IOException e) {
+            System.out.println(host.port);
+            return false;
+        }
+    }
+
+    public String getListOfFiles() {
+        Logger.debugInfo(":::ApiService::getListOfFiles()");
+        int counter = 0;
+        StringBuilder result = new StringBuilder();
+        List<NetworkFile> files = currentHostFilesList.getLocalFiles();
+        if (files == null) {
+            return "There are no files available";
+        }
+        for (NetworkFile file : files) {
+            result.append(counter++ + " " + file.name + " " + file.md5 + System.getProperty("line.separator"));
+        }
+        return result.toString();
+    }
+
+    public String getRemoteListOfFiles(Host host) {
+        Logger.debugInfo(":::ApiService::getRemoteListOfFiles()");
+        StringBuilder result = new StringBuilder();
+        try {
+            Socket socket = establishConnection(host);
+            connector.sendResponse(socket, ApiMethod.LIST.toString(), false);
+            return connector.getResponse(socket);
+        } catch (IOException e) {
+            Logger.errorInfo("Cannot get list of files from host: " + host.ip + ":" + host.port);
+            return null;
+        }
+    }
+
+    public String push(Socket socket, int fileNumber) {
+        Logger.debugInfo(":::ApiService::push()");
+        try {
+            sendFile(socket, fileNumber);
+            return "ok";
+        } catch (FileNotFoundException e) {
+            Logger.info(e.getMessage());
+        }
+        return "There was a problem with downloading a file. Check if it is available on given host.";
+    }
+
+    public void sendFile(Socket socket, int fileNumber) throws FileNotFoundException {
+        Logger.debugInfo(":::ApiService::push()");
+        try {
+            NetworkFile fileToSend = currentHostFilesList.getByIndex(fileNumber);
+            if (fileToSend != null) {
+                connector.sendFileThroughSocket(socket, fileToSend.file);
+                return;
+            }
+            throw new FileNotFoundException("Cannot locate file with index: " + fileNumber);
+        } catch (IOException e) {
+            Logger.errorInfo(e.getMessage() + " " + "Cannot push file to host: " + socket.getInetAddress() + ":" + socket.getLocalPort());
+        }
+    }
+
+    public String saveFile(Socket socket, String targetFolder) {
+        Logger.debugInfo(":::ApiService::pull()");
+        try {
+            InputStream in = socket.getInputStream();
+            int byteToBeRead = -1;
+
+            final File folder = new File(targetFolder);
+            File newFile = new File(folder.getAbsolutePath() + File.separator + new Date().getTime());
+            FileOutputStream fs = new FileOutputStream(newFile);
+            while ((byteToBeRead = in.read()) != -1) {
+                fs.write(byteToBeRead);
+            }
+
+            fs.flush();
+            fs.close();
+
+            return "ok";
+        } catch (IOException e) {
+            Logger.errorInfo("Cannot pull file from: " + socket.getInetAddress() + ":" + socket.getPort());
+        }
+
+        return "There was a problem with downloading a file. Check if it is available on given host.";
+    }
+
+    public Socket sendPayload(Socket socket, String payload, boolean shouldClose) throws IOException {
+        Logger.debugInfo(":::ApiService::sendPayload()");
+        connector.sendResponse(socket, payload, shouldClose);
+        return socket;
+    }
+
+    public void readFromResponse(Socket socket) throws IOException {
+        Logger.debugInfo(":::ApiService::readFromResponse()");
+        connector.readFromResponse(socket);
+    }
+    public String getResponse(Socket socket) throws IOException{
+        Logger.debugInfo(":::ApiService::getResponse()");
+        return connector.getResponse(socket);
+    }
+
+    public static Socket establishConnection(Host host) throws IOException {
+        return new Socket(host.ip, Integer.parseInt(host.port));
+    }
+
+}
