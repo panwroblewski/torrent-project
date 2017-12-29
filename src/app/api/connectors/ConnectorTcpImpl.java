@@ -7,7 +7,6 @@ import app.common.Logger.Logger;
 import java.io.*;
 import java.net.Socket;
 import java.nio.file.Files;
-import java.util.Date;
 
 public class ConnectorTcpImpl implements Connector {
 
@@ -29,12 +28,14 @@ public class ConnectorTcpImpl implements Connector {
     }
 
     @Override
-    public void sendFileThroughSocket(Socket s, File fileToSend, int skip) throws IOException {
+    public void sendFileThroughSocket(Socket socket, File fileToSend, int skip) throws IOException {
         Logger.debugInfo(":::Connector::sendFileThroughSocket()");
+
+
 
         final int DEFAULT_BUFFER_SIZE = 2;
         InputStream in = Files.newInputStream(fileToSend.toPath());
-        OutputStream out = s.getOutputStream();
+        OutputStream out = socket.getOutputStream();
 
         int counter = 0;
         int count;
@@ -51,12 +52,13 @@ public class ConnectorTcpImpl implements Connector {
     }
 
     @Override
-    public void saveFileFromSocket(Socket socket, String targetFolder) throws IOException {
+    public void saveFileFromSocket(Socket socket, String targetFolder, String targetFileName) throws IOException {
+        Logger.debugInfo(":::Connector::saveFileFromSocket()");
         InputStream in = socket.getInputStream();
         int byteToBeRead = -1;
 
         final File folder = new File(targetFolder);
-        File newFile = new File(folder.getAbsolutePath() + File.separator + new Date().getTime());
+        File newFile = new File(folder.getAbsolutePath() + File.separator + targetFileName);
         FileOutputStream fs = new FileOutputStream(newFile);
         while ((byteToBeRead = in.read()) != -1) {
             fs.write(byteToBeRead);
@@ -95,7 +97,7 @@ public class ConnectorTcpImpl implements Connector {
             }
             reader.close();
             return response;
-        } catch (IOException e) {
+        } catch (Exception e) {
             e.printStackTrace();
         }
         return null;

@@ -9,7 +9,7 @@ import java.util.regex.Pattern;
 public class ApiRequest {
 
     private static final Pattern API_COMMAND_PATTERN =
-            Pattern.compile("(list|push|pull|ping|exit)\\s*(file=\\d+)?\\s*(host=[a-zA-Z0-9]*:[\\d]*)?\\s*(downloadFromByte=\\d+)?\\s*");
+            Pattern.compile("(list|push|pull|ping|exit)\\s*(file=\\d+)?\\s*(host=[a-zA-Z0-9]*:[\\d]*)?\\s*(downloadFromByte=\\d+)?\\s*(attachmentFileName=\\d+)?\\s*");
     private static final String REQUEST_OPTION_ENTRY_VALUE_SEPARATOR = "=";
     private static final String REQUEST_OPTION_INET_HOST_SEPARATOR = ":";
 

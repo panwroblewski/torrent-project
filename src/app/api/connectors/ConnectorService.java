@@ -15,8 +15,21 @@ public class ConnectorService {
     public static void sendFileThroughSocket(Socket socket, File fileToSend) {
         try {
             try {
+                connector.sendResponse(socket, fileToSend.getName(), false);
+                String response = connector.getResponse(socket);
+
+                if (!response.equals("ok")) {
+                    Logger.errorInfo("Something went wrong!!!");
+                    return;
+                }
+
                 connector.sendFileThroughSocket(socket, fileToSend, 0);
             } catch (SocketException e) {
+                /**
+                 * This double try catch is for testing purposes only,
+                 * it is fo testing errourous connection and restart after
+                 * connection closed. Feature to beimplemented.
+                 * */
                 try {
                     Socket newSocket = new Socket("localhost", 16900);
                     connector.sendFileThroughSocket(newSocket, fileToSend, 5);
@@ -35,7 +48,9 @@ public class ConnectorService {
 
     public static String saveFileFromSocket(Socket socket, String targetFolder) {
         try {
-            connector.saveFileFromSocket(socket, targetFolder);
+            String response = connector.getResponse(socket);
+            connector.sendResponse(socket, "ok", false);
+            connector.saveFileFromSocket(socket, targetFolder, String.valueOf(response));
 
             return "ok";
         } catch (SocketException e) {

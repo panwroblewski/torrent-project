@@ -9,7 +9,7 @@ public interface Connector {
 
     void sendFileThroughSocket(Socket s, File file, int offset) throws IOException;
 
-    void saveFileFromSocket(Socket s, String targetFolder) throws IOException;
+    void saveFileFromSocket(Socket s, String targetFolder, String targetFileName) throws IOException;
 
     void readFromResponse(Socket socket);
 
