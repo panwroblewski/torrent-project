@@ -15,7 +15,7 @@ public class Env {
     public static boolean isTCP;
     public static boolean isDEBUG;
     public static boolean isMORE_LOGS;
-    public static boolean isTEST_ERROR_CONNECTION;
+    public static boolean isTEST_CONNECTION_ERROR;
 
     private Env(File file) {
         conf = new HashMap<>();
@@ -51,8 +51,8 @@ public class Env {
             isMORE_LOGS = Boolean.valueOf(value);
         } else if (ConfEntry.CONNECTOR_PROTOCOL.equals(confEntry)) {
             isTCP = "TCP".equalsIgnoreCase(value);
-        } else if (ConfEntry.CONNECTOR_PROTOCOL.equals(confEntry)) {
-            isTEST_ERROR_CONNECTION = Boolean.valueOf(value);
+        } else if (ConfEntry.TEST_CONNECTION_ERROR.equals(confEntry)) {
+            isTEST_CONNECTION_ERROR = Boolean.valueOf(value);
         }
     }
 

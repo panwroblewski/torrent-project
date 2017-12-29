@@ -18,7 +18,10 @@ public class Host {
         remoteNetworkFilesList.refreshList(this);
 
         for (RemoteNetworkFile remoteNetworkFile : remoteNetworkFilesList.getFiles()) {
-            System.out.println(remoteNetworkFile.counter + " " + remoteNetworkFile.name + " " + remoteNetworkFile.md5);
+            System.out.println(remoteNetworkFile.counter + " "
+                    + remoteNetworkFile.name + " "
+                    + remoteNetworkFile.md5 + " "
+                    + remoteNetworkFile.size);
         }
     }
 

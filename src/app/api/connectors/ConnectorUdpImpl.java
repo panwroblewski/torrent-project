@@ -1,12 +1,20 @@
 package app.api.connectors;
 
 import java.io.File;
+import java.io.IOException;
 import java.net.Socket;
 
 public class ConnectorUdpImpl implements Connector {
 
+
+    @Override
+    public void saveFileFromSocket(Socket s, String targetFolder) throws IOException {
+        //ToDo
+    }
+
     @Override
     public void sendResponse(Socket s, String payload, boolean shouldClose) {
+        //ToDo
 //        try {
 //            Logger.debugInfo(":::Connector::sendResponse()");
 //
@@ -23,7 +31,8 @@ public class ConnectorUdpImpl implements Connector {
     }
 
     @Override
-    public void sendFileThroughSocket(Socket s, File fileToSend) {
+    public void sendFileThroughSocket(Socket s, File fileToSend, int offset) throws IOException {
+        //ToDo
 //        try {
 //            DatagramSocket datagramSocket = new DatagramSocket(s.getLocalPort(), s.getInetAddress());
 //            Logger.debugInfo(":::Connector::sendFileThroughSocket()");
@@ -45,6 +54,7 @@ public class ConnectorUdpImpl implements Connector {
 
     @Override
     public void readFromResponse(Socket socket) {
+        //ToDo
 //        try {
 //            Logger.debugInfo(":::Connector::readFromResponse()");
 //
@@ -61,6 +71,7 @@ public class ConnectorUdpImpl implements Connector {
 
     @Override
     public String getResponse(Socket socket) {
+        //ToDo
 //        try {
 //            Logger.debugInfo(":::Connector::getResponse()");
 //
@@ -80,6 +91,7 @@ public class ConnectorUdpImpl implements Connector {
 
     @Override
     public boolean ping(Socket socket) {
+        //ToDo
 //        Logger.debugInfo(":::Connector::ping()");
 //
 //        sendResponse(socket, ApiMethod.PING.toString(), false);

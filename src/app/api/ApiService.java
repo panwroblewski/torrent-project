@@ -1,18 +1,19 @@
 package app.api;
 
 import app.api.connectors.Connector;
+import app.api.connectors.ConnectorService;
 import app.api.connectors.ConnectorTcpImpl;
 import app.common.Env.ConfEntry;
 import app.common.Env.Env;
 import app.common.Logger.Logger;
+import app.model.CurrentHostDownloadingNetworkFilesList;
 import app.model.CurrentHostNetworkFilesList;
 import app.model.Host;
-import app.model.CurrentHostDownloadingNetworkFilesList;
 import app.model.NetworkFile;
 
-import java.io.*;
+import java.io.FileNotFoundException;
+import java.io.IOException;
 import java.net.Socket;
-import java.util.Date;
 import java.util.List;
 
 public class ApiService {
@@ -43,6 +44,10 @@ public class ApiService {
         return connector;
     }
 
+    public CurrentHostDownloadingNetworkFilesList getCurrentHostDownloadingNetworkFilesList() {
+        return currentHostDownloadingNetworkFilesList;
+    }
+
     public static boolean ping(Host host) {
         Logger.debugInfo(":::ApiService::ping(), host: " + host.ip + ":" + host.port);
         try {
@@ -64,7 +69,7 @@ public class ApiService {
             return "There are no files available";
         }
         for (NetworkFile file : files) {
-            result.append(counter++ + " " + file.name + " " + file.md5 + System.getProperty("line.separator"));
+            result.append(counter++ + " " + file.name + " " + file.md5 + " " + file.size + System.getProperty("line.separator"));
         }
         return result.toString();
     }
@@ -98,7 +103,7 @@ public class ApiService {
         try {
             NetworkFile fileToSend = currentHostFilesList.getByIndex(fileNumber);
             if (fileToSend != null) {
-                connector.sendFileThroughSocket(socket, fileToSend.file);
+                ConnectorService.sendFileThroughSocket(socket, fileToSend.file);
                 return;
             }
             throw new FileNotFoundException("Cannot locate file with index: " + fileNumber);
@@ -107,28 +112,10 @@ public class ApiService {
         }
     }
 
-    public String saveFile(Socket socket, String targetFolder) {
-        Logger.debugInfo(":::ApiService::saveFile()");
-        try {
-            InputStream in = socket.getInputStream();
-            int byteToBeRead = -1;
+    public void saveFile(Socket socket, String targetFolder) {
+        Logger.debugInfo(":::ApiService::saveFileFromSocket()");
 
-            final File folder = new File(targetFolder);
-            File newFile = new File(folder.getAbsolutePath() + File.separator + new Date().getTime());
-            FileOutputStream fs = new FileOutputStream(newFile);
-            while ((byteToBeRead = in.read()) != -1) {
-                fs.write(byteToBeRead);
-            }
-
-            fs.flush();
-            fs.close();
-
-            return "ok";
-        } catch (IOException e) {
-            Logger.errorInfo("Cannot pull file from: " + socket.getInetAddress() + ":" + socket.getPort());
-        }
-
-        return "There was a problem with downloading a file. Check if it is available on given host.";
+        ConnectorService.saveFileFromSocket(socket, targetFolder);
     }
 
     public Socket sendPayload(Socket socket, String payload, boolean shouldClose) throws IOException {
@@ -150,5 +137,9 @@ public class ApiService {
     public static Socket establishConnection(Host host) throws IOException {
         return new Socket(host.ip, Integer.parseInt(host.port));
     }
+
+//    public void handleDownloadingFile(String command) {
+//        currentHostDownloadingNetworkFilesList.handleDownloadingFile();
+//    }
 
 }

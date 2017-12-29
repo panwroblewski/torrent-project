@@ -6,8 +6,8 @@ import app.common.Logger.Logger;
 
 import java.io.*;
 import java.net.Socket;
-import java.net.SocketException;
 import java.nio.file.Files;
+import java.util.Date;
 
 public class ConnectorTcpImpl implements Connector {
 
@@ -29,27 +29,41 @@ public class ConnectorTcpImpl implements Connector {
     }
 
     @Override
-    public void sendFileThroughSocket(Socket s, File fileToSend) throws SocketException {
-        try {
-            Logger.debugInfo(":::Connector::sendFileThroughSocket()");
+    public void sendFileThroughSocket(Socket s, File fileToSend, int skip) throws IOException {
+        Logger.debugInfo(":::Connector::sendFileThroughSocket()");
 
-            InputStream in = Files.newInputStream(fileToSend.toPath());
-            OutputStream out = s.getOutputStream();
+        final int DEFAULT_BUFFER_SIZE = 2;
+        InputStream in = Files.newInputStream(fileToSend.toPath());
+        OutputStream out = s.getOutputStream();
 
-            int counter = 0;
-            int count;
-            byte[] buffer = new byte[2];
-            while ((count = in.read(buffer)) > 0) {
-                out.write(buffer, 0, count);
-                if (Env.isTEST_ERROR_CONNECTION) { //FOR TESTING ERROR IN CONNECTION
-                    if (counter++ == 3) out.close();
-                }
+        int counter = 0;
+        int count;
+        byte[] buffer = new byte[DEFAULT_BUFFER_SIZE];
+        in.skip(skip);
+        while ((count = in.read(buffer)) > 0) {
+            out.write(buffer, 0, count);
+            if (Env.isTEST_CONNECTION_ERROR) { //FOR TESTING ERROR IN CONNECTION
+                if (counter++ == 3) out.close();
             }
-
-            out.close();
-        } catch (Exception e) {
-            e.printStackTrace();
         }
+
+        out.close();
+    }
+
+    @Override
+    public void saveFileFromSocket(Socket socket, String targetFolder) throws IOException {
+        InputStream in = socket.getInputStream();
+        int byteToBeRead = -1;
+
+        final File folder = new File(targetFolder);
+        File newFile = new File(folder.getAbsolutePath() + File.separator + new Date().getTime());
+        FileOutputStream fs = new FileOutputStream(newFile);
+        while ((byteToBeRead = in.read()) != -1) {
+            fs.write(byteToBeRead);
+        }
+
+        fs.flush();
+        fs.close();
     }
 
     @Override

@@ -1,6 +1,7 @@
 package app.server;
 
 import app.api.ApiMethod;
+import app.api.ApiRequest;
 import app.api.ApiService;
 import app.common.Env.ConfEntry;
 import app.common.Env.Env;
@@ -21,7 +22,6 @@ public class Server {
     private static int DEFAULT_SERVER_PORT_NUMBER = pickPort();
     private static ApiService apiService = ApiService.getInstance();
 
-
     public static void start() throws UnknownHostException, IOException {
         pickPort();
 
@@ -38,41 +38,22 @@ public class Server {
                             new InputStreamReader(socket.getInputStream()));
                     String line = null;
 
-
                     while (!socket.isClosed() && (line = in.readLine()) != null) {
                         Logger.log("SERVER-" + socket.getInetAddress() + ":" + socket.getLocalPort(), "received request: " + line);
+                        ApiRequest apiRequest = ApiRequest.parseCommand(line);
 
-                        if (line.startsWith(ApiMethod.PUSH.toString())) {
+                        if (apiRequest.type.equals(ApiMethod.PUSH)) {
                             apiService.saveFile(socket, Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH));
-                        } else if (line.startsWith(ApiMethod.LIST.toString())) {
+                        } else if (apiRequest.type.equals(ApiMethod.LIST)) {
                             apiService.sendPayload(socket, apiService.getListOfFiles(), true);
-                        } else if (line.startsWith(ApiMethod.PULL.toString())) {
-                            int fileNumber = Integer.parseInt(line.split(" ")[1]);
-                            apiService.sendFile(socket, fileNumber);
+                        } else if (apiRequest.type.equals(ApiMethod.PULL)) {
+                            apiService.sendFile(socket, Integer.parseInt(apiRequest.fileNumber));
                             socket.close();
-                        } else if (line.startsWith(ApiMethod.PING.toString())) {
+                        } else if (apiRequest.type.equals(ApiMethod.PING)) {
                             apiService.sendPayload(socket, "ok", true);
                         }
                     }
 
-//                    while (!s.isClosed() && (line = in.readLine()) != null) {
-//                        Logger.log("SERVER-" + DEFAULT_SERVER_PORT_NUMBER, "received request: " + line);
-//
-//                        if (line.startsWith(ApiMethod.PUSH.toString())) {
-//
-//                            //ToDo PUSH IMPLEMENTATION
-//                        } else if (line.startsWith(ApiMethod.LIST.toString())) {
-//
-//                            apiService.getConnector().sendResponse(s, apiService.getListOfFiles(), true);
-//
-//                        } else if (line.startsWith(ApiMethod.PULL.toString())) {
-//                            int fileNumber = Integer.parseInt(line.split(" ")[1]);
-////                            in.close();
-//                            apiService.getConnector().sendFileThroughSocket(s, apiService.currentHostFilesList.getByIndex(0).file);
-//                        } else if (line.startsWith(ApiMethod.PING.toString())) {
-//                            apiService.getConnector().sendResponse(s, "ok", true);
-//                        }
-//                    }
                 }
             } catch (IOException e) {
                 e.printStackTrace();

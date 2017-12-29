@@ -1,9 +1,5 @@
 package app.api;
 
-import app.model.Host;
-
-import java.util.Optional;
-
 public enum ApiMethod {
     LIST("list"),
     PUSH("push"),
@@ -31,15 +27,14 @@ public enum ApiMethod {
         return false;
     }
 
-    public static Optional<Host> getTargetHost(String command) {
-        if (command.contains("host")) {
-            if (!command.endsWith(" ")) command += " "; //* Api behaviour
-            String substring = command.substring(command.indexOf("host"), command.length());
-            String substringHostOnly = substring.substring(substring.indexOf("="), substring.indexOf(" "));
-            String[] split = substringHostOnly.split(":");
-            return Optional.of(new Host(split[0].replaceAll("[=;\\-\\s]",""), split[1].replaceAll("[=;\\-\\s]",""), false));
+    public static ApiMethod fromString(String text) {
+        for (ApiMethod method : ApiMethod.values()) {
+            if (method.method.equalsIgnoreCase(text)) {
+                return method;
+            }
         }
-        return Optional.empty();
+        return null;
     }
+
 }
 //show host=localhost:16900

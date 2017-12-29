@@ -1,6 +1,7 @@
 package app.client;
 
 import app.api.ApiMethod;
+import app.api.ApiRequest;
 import app.api.ApiService;
 import app.common.Env.ConfEntry;
 import app.common.Env.Env;
@@ -31,33 +32,28 @@ public class Client {
 
                     Logger.uiInfo("Choose command:");
 
-
                     String command = scanner.nextLine();
 
                     if (ApiMethod.isApiMethod(command)) {
+                        ApiRequest apiRequest = ApiRequest.parseCommand(command);
 
-                        Optional<Host> host = ApiMethod.getTargetHost(command).isPresent() ? ApiMethod.getTargetHost(command) : ClientsList.getFirstAvailable();
+                        Optional<Host> host = apiRequest.host != null
+                                ? Optional.of(apiRequest.host)
+                                : ClientsList.getFirstAvailable();
 
                         if (host.isPresent()) {
                             Logger.log("CLIENT", command + " to host: " + host.get().ip + ":" + host.get().port);
 
-//                            Socket socket = ApiService.establishConnection(host.get());
-//
-//                            BufferedWriter out = new BufferedWriter(new OutputStreamWriter(socket.getOutputStream()));
-//                            out.write(command);
-//                            out.newLine();
-//                            out.flush();
-
                             Socket socket = ApiService.establishConnection(host.get());
-                            apiService.sendPayload(socket, command, false);
+                            apiService.sendPayload(socket, apiRequest.command, false);
 
-                            if (command.startsWith(ApiMethod.LIST.toString())) {
+                            if (apiRequest.type.equals(ApiMethod.LIST)) {
                                 apiService.readFromResponse(socket);
-                            } else if (command.startsWith(ApiMethod.PUSH.toString())) {
-                                apiService.push(socket, 0);
-                            } else if (command.startsWith(ApiMethod.PULL.toString())) {
+                            } else if (apiRequest.type.equals(ApiMethod.PUSH)) {
+                                apiService.push(socket, Integer.parseInt(apiRequest.fileNumber));
+                            } else if (apiRequest.type.equals(ApiMethod.PULL)) {
                                 apiService.saveFile(socket, Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH));
-                            } else if (command.startsWith(ApiMethod.EXIT.toString())) {
+                            } else if (apiRequest.type.equals(ApiMethod.EXIT)) {
                                 Logger.log("CLIENT", ApiMethod.EXIT.toString());
                                 break;
                             }
