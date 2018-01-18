@@ -14,6 +14,13 @@ public class Host {
         this.remoteNetworkFilesList = new RemoteNetworkFilesList(this);
     }
 
+    public Host(String ip, String port) {
+        this.ip = ip;
+        this.port = port;
+        this.isOnline = true;
+        this.remoteNetworkFilesList = null;
+    }
+
     public void lisfAvailableFiles() {
         remoteNetworkFilesList.refreshList(this);
 

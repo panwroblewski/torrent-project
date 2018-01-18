@@ -1,5 +1,6 @@
 package app;
 
+import app.HttpServer.HttpLogServer;
 import app.client.Client;
 import app.server.Server;
 
@@ -11,6 +12,7 @@ public class Main {
         try {
             Server.start();
             Client.start();
+            HttpLogServer.start();
         } catch (IOException e) {
             e.printStackTrace();
         }

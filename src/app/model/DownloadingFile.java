@@ -1,5 +1,12 @@
 package app.model;
 
+import app.common.Env.ConfEntry;
+import app.common.Env.Env;
+import app.common.Logger.Logger;
+import app.common.Utils;
+
+import java.io.File;
+
 public class DownloadingFile {
     public boolean isDownloading;
     public String name;
@@ -27,6 +34,15 @@ public class DownloadingFile {
     }
 
     public boolean isDownloaded() {
-        return !this.isDownloading && (this.currentSize == this.targetSize);
+        return /*!this.isDownloading && */(this.currentSize == this.targetSize);
     }
+
+    public boolean checksum() {
+        File file = new File(Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH) + File.separator + this.name);
+        Logger.uiInfo("Checksum... ");
+        String newMd5 = Utils.Md5(file);
+        Logger.uiInfo("Downloaded file: " + newMd5 + ", remote file: " + this.targetMD5);
+        return this.targetMD5.equals(newMd5);
+    }
+
 }

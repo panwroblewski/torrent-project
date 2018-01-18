@@ -22,7 +22,7 @@ public class CurrentHostDownloadingNetworkFilesList {
         return file;
     }
 
-    public DownloadingFile handleDownloadingFile(RemoteNetworkFile remoteNetworkFile) {
+    public DownloadingFile getDownloadingFile(RemoteNetworkFile remoteNetworkFile) {
         if (isDownloading(remoteNetworkFile)) {
             return filterDownloads(isNotDownloadedAndOnListByName(remoteNetworkFile)).get(0);
         } else {

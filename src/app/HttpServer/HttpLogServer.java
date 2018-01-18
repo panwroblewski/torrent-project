@@ -1,78 +1,31 @@
 package app.HttpServer;
 
-import app.api.ApiMethod;
-import app.api.ApiRequest;
-import app.api.ApiService;
-import app.common.Env.ConfEntry;
-import app.common.Env.Env;
 import app.common.Logger.Logger;
-import app.model.ClientsList;
-import app.model.Host;
+import com.sun.net.httpserver.HttpServer;
 
 import java.io.IOException;
-import java.net.Socket;
+import java.net.InetSocketAddress;
 import java.net.UnknownHostException;
-import java.util.Optional;
-import java.util.Scanner;
 
-public class HttpServer {
+public class HttpLogServer {
 
-    private static int DEFAULT_CLIENT_PORT_NUMBER = 17000;
-    private static ApiService apiService = ApiService.getInstance();
+    public static int DEFAULT_HTTP_SERVER_PORT_NUMBER = 17000;
 
     public static void start() throws UnknownHostException, IOException {
 
         new Thread(() -> {
+
+            HttpServer server = null;
             try {
-                ClientsList.listAllAvaliable();
+                server = HttpServer.create(new InetSocketAddress(DEFAULT_HTTP_SERVER_PORT_NUMBER), 0);
 
-                Scanner scanner = new Scanner(System.in);
+                Logger.log("HttpServer", "started at port: " + DEFAULT_HTTP_SERVER_PORT_NUMBER);
+                server.createContext("/", new RootHandler());
+                server.createContext("/log", new LogHandler());
+                server.setExecutor(null);
+                server.start();
 
-                while (true) {
-
-                    Logger.uiInfo("Choose command:");
-
-                    String command = scanner.nextLine();
-
-                    if (ApiMethod.isApiMethod(command)) {
-                        ApiRequest apiRequest = ApiRequest.parseCommand(command);
-
-                        Optional<Host> host = apiRequest.host != null
-                                ? Optional.of(apiRequest.host)
-                                : ClientsList.getFirstAvailable();
-
-                        if (host.isPresent()) {
-                            Socket socket = ApiService.establishConnection(host.get());
-                            Logger.log("_CLIENT:" + socket.getInetAddress() + ":" + socket.getPort(), command + " to host: " + host.get().ip + ":" + host.get().port);
-                            apiService.sendPayload(socket, apiRequest.command, false);
-
-                            if (apiRequest.type.equals(ApiMethod.LIST)) {
-                                apiService.readFromResponse(socket);
-                            } else if (apiRequest.type.equals(ApiMethod.PUSH)) {
-                                apiService.push(socket, Integer.parseInt(apiRequest.fileNumber));
-                            } else if (apiRequest.type.equals(ApiMethod.PULL)) {
-                                apiService.saveFile(socket, Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH), false);
-                            } else if (apiRequest.type.equals(ApiMethod.EXIT)) {
-                                Logger.log("CLIENT", ApiMethod.EXIT.toString());
-                                break;
-                            }
-//                            socket.close();
-                            Thread.sleep(200);
-                        } else {
-                            Logger.uiInfo("Host is not available");
-                        }
-                    } else {
-                        Logger.uiInfo("Command: " + command + " is unknown");
-                    }
-
-                }
-
-                scanner.close();
-            } catch (UnknownHostException e) {
-                e.printStackTrace();
             } catch (IOException e) {
-                e.printStackTrace();
-            } catch (InterruptedException e) {
                 e.printStackTrace();
             }
 

@@ -39,4 +39,11 @@ public class RemoteNetworkFilesList {
         }
         return files;
     }
+
+    public RemoteNetworkFile getRemoteNetworkFileByName(String name) {
+        for (RemoteNetworkFile file : files) {
+            if (name.equals(file.name)) return file;
+        }
+        return null;
+    }
 }

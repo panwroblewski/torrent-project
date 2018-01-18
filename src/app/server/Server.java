@@ -22,6 +22,9 @@ public class Server {
     private static int DEFAULT_SERVER_PORT_NUMBER = pickPort();
     private static ApiService apiService = ApiService.getInstance();
 
+    public static String appAddress;
+
+
     public static void start() throws UnknownHostException, IOException {
         pickPort();
 
@@ -30,6 +33,9 @@ public class Server {
             try {
                 Logger.uiInfo("Server starting on port: " + DEFAULT_SERVER_PORT_NUMBER + "....");
                 ss = new ServerSocket(DEFAULT_SERVER_PORT_NUMBER);
+                appAddress = ("localhost" /*ss.getInetAddress()*/ + ":" + DEFAULT_SERVER_PORT_NUMBER);
+                Logger.uiInfo("Server address: " + appAddress);
+
 
                 while (true) {
                     Socket socket = ss.accept();
@@ -41,16 +47,17 @@ public class Server {
                     while (!socket.isClosed() && (line = in.readLine()) != null) {
                         Logger.log("SERVER-" + socket.getInetAddress() + ":" + socket.getLocalPort(), "received request: " + line);
                         ApiRequest apiRequest = ApiRequest.parseCommand(line);
+                        Logger.log("SERVER-" + socket.getInetAddress() + ":" + socket.getLocalPort(), "parsed ApiMethod: " + apiRequest);
 
                         if (apiRequest.type.equals(ApiMethod.PUSH)) {
-                            apiService.saveFile(socket, Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH));
+                            apiService.saveFile(socket, Env.getInstance().getConf().get(ConfEntry.DOWNLOADS_FOLDER_PATH), true);
                         } else if (apiRequest.type.equals(ApiMethod.LIST)) {
                             apiService.sendPayload(socket, apiService.getListOfFiles(), true);
                         } else if (apiRequest.type.equals(ApiMethod.PULL)) {
-                            apiService.sendFile(socket, Integer.parseInt(apiRequest.fileNumber));
+                            apiService.sendFile(socket, Integer.parseInt(apiRequest.fileNumber), true, apiRequest.retransmitToIp, apiRequest.retransmitToPort);
                             socket.close();
                         } else if (apiRequest.type.equals(ApiMethod.PING)) {
-                            apiService.sendPayload(socket, "ok", true);
+                            apiService.sendPayload(socket, ApiRequest.REQUEST_OK_MESSAGE, true);
                         }
                     }
 

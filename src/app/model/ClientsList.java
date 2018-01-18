@@ -56,4 +56,30 @@ public class ClientsList {
     public static Optional<Host> getFirstAvailable() {
         return hosts.values().stream().filter(host -> host.isOnline).findFirst();
     }
+
+    public static Optional<Host> getByIpAndPort(String ip, String port) {
+        return hosts.values().stream().filter(host -> host.ip.equals(ip) && host.port.equals(port)).findFirst();
+    }
+
+    public static RemoteNetworkFile getRemoteNetworkFileByNameFromFirstAvailableHost(String name) {
+        RemoteNetworkFile remoteNetworkFile = null;
+        for (Host host : hosts.values()) {
+            if (!host.isOnline) continue;
+            remoteNetworkFile = host.remoteNetworkFilesList.getRemoteNetworkFileByName(name);
+            if (remoteNetworkFile != null) return remoteNetworkFile;
+        }
+        return null;
+    }
+
+    public static RemoteNetworkFile getRemoteNetworkFileByNameFromHost(String name, Host hostToConnect) {
+        Logger.debugInfo(":::ClientList::getRemoteNetworkFileByNameFromHost(" + name + ", " + hostToConnect.ip + ":" + hostToConnect.port + ")");
+        RemoteNetworkFile remoteNetworkFile = null;
+        for (Host host : hosts.values()) {
+            if ((hostToConnect.ip.equals("localhost") || hostToConnect.ip.equals(host.ip)) && hostToConnect.port.equals(host.port) && host.isOnline) {
+                remoteNetworkFile = host.remoteNetworkFilesList.getRemoteNetworkFileByName(name);
+            }
+            if (remoteNetworkFile != null) return remoteNetworkFile;
+        }
+        return null;
+    }
 }

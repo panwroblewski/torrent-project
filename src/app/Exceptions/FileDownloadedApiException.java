@@ -1,7 +1,7 @@
 package app.Exceptions;
 
-/**
- * Created by adam on 17.01.2018.
- */
-public class FileDownloadedApiException {
+public class FileDownloadedApiException extends Exception {
+    public FileDownloadedApiException(String message) {
+        super(message);
+    }
 }

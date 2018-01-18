@@ -80,30 +80,30 @@ public class ApiService {
         try {
             Socket socket = establishConnection(host);
             connector.sendResponse(socket, ApiMethod.LIST.toString(), false);
-            return connector.getResponse(socket);
+            return connector.getResponse(socket, true);
         } catch (IOException e) {
             Logger.errorInfo("Cannot get list of files from host: " + host.ip + ":" + host.port);
             return null;
         }
     }
 
-    public String push(Socket socket, int fileNumber) {
+    public String push(Socket socket, int fileNumber, String retransmitToIp, String retransmitToPort) {
         Logger.debugInfo(":::ApiService::push()");
         try {
-            sendFile(socket, fileNumber);
-            return "ok";
+            sendFile(socket, fileNumber, false, retransmitToIp, retransmitToPort);
+            return ApiRequest.REQUEST_OK_MESSAGE;
         } catch (FileNotFoundException e) {
             Logger.info(e.getMessage());
         }
         return "There was a problem with downloading a file. Check if it is available on given host.";
     }
 
-    public void sendFile(Socket socket, int fileNumber) throws FileNotFoundException {
+    public void sendFile(Socket socket, int fileNumber, boolean local, String retransmitToIp, String retransmitToPort) throws FileNotFoundException {
         Logger.debugInfo(":::ApiService::sendFile()");
         try {
             NetworkFile fileToSend = currentHostFilesList.getByIndex(fileNumber);
             if (fileToSend != null) {
-                ConnectorService.sendFileThroughSocket(socket, fileToSend.file);
+                ConnectorService.sendFileThroughSocket(socket, fileToSend.file, local, retransmitToIp, retransmitToPort);
                 return;
             }
             throw new FileNotFoundException("Cannot locate file with index: " + fileNumber);
@@ -112,10 +112,10 @@ public class ApiService {
         }
     }
 
-    public void saveFile(Socket socket, String targetFolder) {
-        Logger.debugInfo(":::ApiService::saveFileFromSocket()");
+    public void saveFile(Socket socket, String targetFolder, boolean local) {
+        Logger.debugInfo(":::ApiService::saveFile()");
 
-        ConnectorService.saveFileFromSocket(socket, targetFolder);
+        ConnectorService.saveFileFromSocket(socket, targetFolder, local);
     }
 
     public Socket sendPayload(Socket socket, String payload, boolean shouldClose) throws IOException {
@@ -129,9 +129,9 @@ public class ApiService {
         connector.readFromResponse(socket);
     }
 
-    public String getResponse(Socket socket) throws IOException{
+    public String getResponse(Socket socket, boolean shouldClose) throws IOException{
         Logger.debugInfo(":::ApiService::getResponse()");
-        return connector.getResponse(socket);
+        return connector.getResponse(socket, shouldClose);
     }
 
     public static Socket establishConnection(Host host) throws IOException {
