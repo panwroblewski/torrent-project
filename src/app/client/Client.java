@@ -31,8 +31,7 @@ public class Client {
                 Scanner scanner = new Scanner(System.in);
 
                 while (true) {
-
-                    Logger.uiInfo("Choose command:");
+                    logClientReady();
 
                     String command = scanner.nextLine();
 
@@ -90,6 +89,12 @@ public class Client {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private static void logClientReady() {
+        Logger.uiInfo("Client ready, you can query the following: ");
+        Logger.uiInfo("\"(list|push|pull|ping|exit)\\\\s*(file=\\\\d+)?\\\\s*(host=[a-zA-Z0-9./]*:[\\\\d]*)?\\\\s*(downloadFromByte=\\\\d+)?\\\\s*(retransmitTo=[a-zA-Z0-9./]*:[\\\\d]*)?\\\\s*\"");
+        Logger.uiInfo("Choose command: ");
     }
 
 }
