@@ -11,6 +11,7 @@ java -jar TorrentProject.jar
 ````
 - Paths and globals can be configured in conf/application.conf - Application specific
 - You can configure a list of available host which applications will try to connect to in assets/hosts.txt - This file needs to be the same in every instance, so instances know about each other
+- Connection error can be tested by setting TEST_CONNECTION_ERROR="true" in application.conf - this will close socket after some bytes of file are sent (ConnectorTcpImpl class sendFileThroughSocket() method
 
 **API**
 
